@@ -1,5 +1,7 @@
 # Bare Foot Arthemis
 
-Members:    Cahapay, Bryle
-            Domero, Shane Mae
-            Macuha, Jovi Nica
+Members: 
+   
+Cahapay, Bryle
+Domero, Shane Mae
+Macuha, Jovi Nica
