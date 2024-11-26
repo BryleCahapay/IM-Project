@@ -25,3 +25,17 @@ body {
     text-wrap: balance;
   }
 }
+
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}

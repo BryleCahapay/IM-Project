@@ -11,6 +11,11 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        brown: {
+          800: '#3E2723', // Add custom brown color
+          700: '#6A4E23', // Dark brown
+          500: '#8C5E3C', // Medium brown
+        },
       },
     },
   },
