@@ -2,39 +2,46 @@
 // import { NextApiRequest, NextApiResponse } from 'next';
 
 // export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+//   // Initialize the Vercel PostgreSQL client
 //   const client = createClient();
 
 //   try {
+//     // Connect to the database
 //     await client.connect();
 
 //     if (req.method === 'POST') {
-//       const { email, name, price, quantity } = req.body;
+//       const { name, price, quantity, email } = req.body;
 
-//       if (!email || !name || !price || !quantity) {
-//         return res.status(400).json({ message: 'Missing required fields' });
+//       // Validate required fields
+//       if (!name || !price || !quantity || !email) {
+//         return res.status(400).json({ error: 'Missing required fields' });
 //       }
 
-//       // Insert or update item in the database
+//       // Insert data into the database
 //       const query = `
-//         INSERT INTO cart_items (email, name, price, quantity)
+//         INSERT INTO cart_items (name, price, quantity)
 //         VALUES ($1, $2, $3, $4)
-//         ON CONFLICT (email, name)
-//         DO UPDATE SET quantity = cart_items.quantity + $4
-//         RETURNING *;
+//         RETURNING id;
 //       `;
-//       const values = [email, name, price, quantity];
+//       const values = [name, price, quantity, email];
+
 //       const result = await client.query(query, values);
 
-//       // Return the added or updated item
-//       res.status(200).json({ message: 'Item added to cart', item: result.rows[0] });
+//       // Return a success response with the inserted item's ID
+//       res.status(200).json({
+//         message: 'Item added to cart successfully',
+//         id: result.rows[0].id,
+//       });
 //     } else {
-//       // Handle unsupported HTTP methods
-//       res.status(405).json({ message: 'Method not allowed' });
+//       // Handle unsupported methods
+//       res.setHeader('Allow', ['POST']);
+//       res.status(405).end(`Method ${req.method} Not Allowed`);
 //     }
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-//     res.status(500).json({ message: 'Database error', error: errorMessage });
+//   } catch (error: any) {
+//     console.error('Database error:', error.message);
+//     res.status(500).json({ error: 'Internal server error' });
 //   } finally {
+//     // Clean up the connection
 //     await client.end();
 //   }
 // }

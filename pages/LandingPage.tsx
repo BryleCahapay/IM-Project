@@ -43,46 +43,53 @@ const LandingPage = () => {
   };
 
   const addToCart = async (item: PetFoodItem) => {
-    const existingItemIndex = cartItems.findIndex(cartItem => cartItem.name === item.name);
+    try {
+      const existingItemIndex = cartItems.findIndex(cartItem => cartItem.name === item.name);
   
-    if (existingItemIndex !== -1) {
-      const updatedCartItems = cartItems.map((cartItem, index) =>
-        index === existingItemIndex
-          ? { ...cartItem, quantity: (cartItem.quantity ?? 0) + 1 }
-          : cartItem
-      );
+      if (existingItemIndex !== -1) {
+        const updatedCartItems = cartItems.map((cartItem, index) =>
+          index === existingItemIndex
+            ? { ...cartItem, quantity: (cartItem.quantity ?? 0) + 1 }
+            : cartItem
+        );
   
-      setCartItems(updatedCartItems);
-      localStorage.setItem('cartItems', JSON.stringify(updatedCartItems));
+        setCartItems(updatedCartItems);
+        localStorage.setItem('cartItems', JSON.stringify(updatedCartItems));
   
-      // Update item in the database
-      await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: item.name,
-          price: item.price,
-          quantity: 1, // Increment quantity
-        }),
-      });
-    } else {
-      const updatedCartItems = [...cartItems, { ...item, quantity: 1 }];
-      setCartItems(updatedCartItems);
-      localStorage.setItem('cartItems', JSON.stringify(updatedCartItems));
+        // Send the updated item to the database
+        await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: item.name,
+            price: item.price,
+            quantity: 1, // Increment quantity
+            user_id: 1, // Replace with the actual user ID
+          }),
+        });
+      } else {
+        const updatedCartItems = [...cartItems, { ...item, quantity: 1 }];
+        setCartItems(updatedCartItems);
+        localStorage.setItem('cartItems', JSON.stringify(updatedCartItems));
   
-      // Add new item to the database
-      await fetch('/api/cart', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: item.name,
-          price: item.price,
-          quantity: 1,
-        }),
-      });
+        // Send the new item to the database
+        await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: item.name,
+            price: item.price,
+            quantity: 1,
+            user_id: 1, // Replace with the actual user ID
+          }),
+        });
+      }
+  
+      setCartCount(cartItems.length + 1);
+    } catch (error) {
+      console.error(error);
+      alert('This item is sold out and cannot be added to your cart.');
     }
-  
-    setCartCount(cartItems.length + 1);
   };
   
   

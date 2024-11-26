@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { id, status } = req.body;
 
   if (!id || !status) {
-    return res.status(400).json({ error: 'Missing required fields' });
+    return res.status(400).json({ error: 'Missing required fields: id and status' });
   }
 
   const client = createClient();
@@ -17,18 +17,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await client.connect();
 
-    //Pag UPDATE ng status sa receipts kung ano yung Id niya
-    //Kapag pinindot yung Mark as Completed doon siya mag upupdate
-    const query = 'UPDATE receipts SET status = $1 WHERE id = $2';
-    const values = [status, id];
+    // Using stored procedure for updating the order status
+    const query = 'CALL update_order_status($1, $2)';
+    const values = [id, status];
 
     const result = await client.query(query, values);
 
-    if (result.rowCount !== null && result.rowCount > 0) {
-      res.status(200).json({ message: 'Order status updated successfully' });
-    } else {
-      res.status(404).json({ error: 'Order not found' });
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: `Order with ID ${id} not found` });
     }
+
+    res.status(200).json({ message: 'Order status updated successfully' });
   } catch (error) {
     console.error('Error updating order status:', error);
     res.status(500).json({ error: 'Failed to update order status' });

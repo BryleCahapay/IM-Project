@@ -25,15 +25,35 @@ const CartPage = () => {
     }
   }, [items]);
 
-  const handleQuantityChange = (index: number, increment: number) => {
-    setItems((prevItems) =>
-      prevItems.map((item, i) =>
-        i === index
-          ? { ...item, quantity: Math.max(1, (item.quantity ?? 1) + increment) } // Ensure quantity is not less than 1
-          : item
-      )
-    );
+  const handleQuantityChange = async (index: number, increment: number) => {
+    const newQuantity = Math.max(1, (items[index].quantity ?? 1) + increment);
+  
+    // Check with the backend if the stock is sufficient
+    const response = await fetch('/api/check-stock', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        itemName: items[index].name,
+        quantity: newQuantity,
+      }),
+    });
+  
+    const data = await response.json();
+  
+    if (data.success) {
+      // If stock is sufficient, update the cart state
+      setItems((prevItems) =>
+        prevItems.map((item, i) =>
+          i === index ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    } else {
+      alert(data.message || 'Not enough stock available.');
+    }
   };
+  
 
   const handleCheckboxChange = (index: number) => {
     setItems((prevItems) =>
@@ -52,29 +72,63 @@ const CartPage = () => {
     0
   );
 
-  const handleCheckout = () => {
-    const selectedItems = items.filter(item => item.isChecked).map(item => ({ ...item, quantity: item.quantity }));
-    if (selectedItems.length > 0) {
-      const totalAmount = totalPrice;
+  const handleCheckout = async () => {
+    // Filter the selected items
+    const selectedItems = items.filter(item => item.isChecked && (item.quantity ?? 1) > 0);
   
-      localStorage.setItem('cartItems', JSON.stringify(selectedItems)); // Save selected items
+    if (selectedItems.length === 0) {
+      alert('Please select at least one item with a quantity greater than zero to check out.');
+      return;
+    }
   
-      setItems([]); 
-  
-      localStorage.setItem('cartCount', '0');
-  
-
-      router.push({
-        pathname: '/PaymentMethod',
-        query: { cartItems: JSON.stringify(selectedItems), totalAmount: totalAmount }
+    // Check stock for each selected item
+    const stockCheckPromises = selectedItems.map(async (item) => {
+      const response = await fetch('/api/check-stock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          itemName: item.name,
+          quantity: item.quantity ?? 1, // Default to 1 if quantity is undefined
+        }),
       });
   
-      // Optionally clear cart from localStorage after checkout
-      localStorage.setItem('cartItems', JSON.stringify([]));
-    } else {
-      alert('Please select at least one item to check out.');
+      const data = await response.json();
+      return { item, isAvailable: data.success, message: data.message };
+    });
+  
+    const stockCheckResults = await Promise.all(stockCheckPromises);
+  
+    // If any item has insufficient stock, alert the user and don't proceed with checkout
+    const unavailableItems = stockCheckResults.filter(result => !result.isAvailable);
+    if (unavailableItems.length > 0) {
+      const unavailableItemsNames = unavailableItems.map(result => result.item.name).join(', ');
+      alert(`The following items are out of stock and cannot be checked out: ${unavailableItemsNames}`);
+      return;
     }
+  
+    // If all items have sufficient stock, proceed with the checkout
+    const totalAmount = selectedItems.reduce(
+      (total, item) => total + (item.price * (item.quantity ?? 1)),
+      0
+    );
+  
+    localStorage.setItem('cartItems', JSON.stringify(selectedItems)); // Save selected items
+    setItems([]); // Clear the cart state
+  
+    localStorage.setItem('cartCount', '0'); // Reset the cart count
+  
+    router.push({
+      pathname: '/PaymentMethod',
+      query: { cartItems: JSON.stringify(selectedItems), totalAmount: totalAmount }
+    });
+  
+    // Optionally clear cart from localStorage after checkout
+    localStorage.setItem('cartItems', JSON.stringify([]));
   };
+  
+  
   
 
 
@@ -120,7 +174,8 @@ const CartPage = () => {
         <button onClick={() => handleQuantityChange(index, -1)} className="bg-gray-100 p-1 rounded text-black font-bold">
           -
         </button>
-        <span className="font-bold text-black">{item.quantity}</span>
+        <span className="font-bold text-black">{item.quantity ?? 1}</span>
+
         <button onClick={() => handleQuantityChange(index, 1)} className="bg-gray-100 p-1 rounded text-black font-bold">
           +
         </button>
