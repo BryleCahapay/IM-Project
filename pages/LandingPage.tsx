@@ -19,6 +19,7 @@ const LandingPage = () => {
   const [cartItems, setCartItems] = useState<PetFoodItem[]>([]);
   const [cartCount, setCartCount] = useState<number>(0);
   const [showLogoutModal, setShowLogoutModal] = useState<boolean>(false); // Modal state
+  
   const router = useRouter();
 
   // Retrieve the authentication status and email from the AuthContext

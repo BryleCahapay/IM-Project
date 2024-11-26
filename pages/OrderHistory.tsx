@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useAuth } from '../context/Authcontext'; // Import the useAuth hook
 
 interface Order {
   id: number;
@@ -16,33 +17,40 @@ interface Order {
 }
 
 const OrderHistory = () => {
+  const { isAuthenticated, logout } = useAuth(); // Access authentication state and logout function
   const [orders, setOrders] = useState<Order[]>([]); // Array to store orders
   const [loading, setLoading] = useState(true); // Loading state
   const router = useRouter();
 
-  // Fetch orders from the API
+  // Check if the user is authenticated, if not, redirect to LoginForm
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const response = await fetch('/api/orderlist'); // API endpoint to fetch the order list
-        if (response.ok) {
-          const data = await response.json();
-          setOrders(data); // Set orders in state
-        } else {
-          console.error('Error fetching orders');
+    if (!isAuthenticated) {
+      router.push('/LoginForm');
+    } else {
+      // Fetch orders only if authenticated
+      const fetchOrders = async () => {
+        try {
+          const response = await fetch('/api/orderlist'); // API endpoint to fetch the order list
+          if (response.ok) {
+            const data = await response.json();
+            setOrders(data); // Set orders in state
+          } else {
+            console.error('Error fetching orders');
+          }
+        } catch (error) {
+          console.error('Error fetching orders:', error);
+        } finally {
+          setLoading(false); // Set loading to false when data is fetched
         }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-      } finally {
-        setLoading(false); // Set loading to false when data is fetched
-      }
-    };
+      };
 
-    fetchOrders();
-  }, []); // Empty dependency array means this will run once when the component mounts
+      fetchOrders();
+    }
+  }, [isAuthenticated, router]); // Run when authentication state changes
 
   // Logout handler
   const handleLogout = () => {
+    logout(); // Call logout from AuthContext
     router.push('/LoginForm');
   };
 

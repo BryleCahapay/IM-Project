@@ -10,6 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     try {
       // Query to check if enough stock is available
+
+      //Sa pag select sa database on_hand i chcheck niya kung 0 yung stock
       const result = await client.sql`
         SELECT on_hand
         FROM pet_foods

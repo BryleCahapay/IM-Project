@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
+import { useAuth } from '../context/Authcontext'; // Make sure to adjust the import path
+import { useRouter } from 'next/router'; // Add this import
 
 const Home: React.FC = () => {
+  const { isAuthenticated } = useAuth(); // Destructure values from AuthContext
+  const router = useRouter(); // Initialize the router
+
+  // Redirect user to LoginPage if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/LoginForm');
+    }
+  }, [isAuthenticated, router]);
+
   return (
     <div
       className="flex flex-col h-screen px-6 py-12 bg-cover bg-center bg-fixed"
