@@ -1,40 +1,41 @@
-// import { createClient } from '@vercel/postgres';
-// import { NextApiRequest, NextApiResponse } from 'next';
+import { createClient } from '@vercel/postgres';
+import { NextApiRequest, NextApiResponse } from 'next';
 
-// export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-//   const client = createClient();
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method === 'POST') {
+        try {
+            const client = createClient();
+            await client.connect();
 
-//   try {
-//     await client.connect();
+            const { name, price, quantity, customer_id } = req.body;
 
-//     if (req.method === 'POST') {
-//       const { email, name, price, quantity } = req.body;
+            // Fetch the email of the customer using user_id
+            const emailResult = await client.query(
+                'SELECT email FROM customeraccount WHERE customer_id = $1',
+                [customer_id]
+            );
 
-//       if (!email || !name || !price || !quantity) {
-//         return res.status(400).json({ message: 'Missing required fields' });
-//       }
+            // If email is found
+            if (emailResult.rows.length > 0) {
+                const email = emailResult.rows[0].email;
 
-//       // Insert or update item in the database
-//       const query = `
-//         INSERT INTO cart_items (email, name, price, quantity)
-//         VALUES ($1, $2, $3, $4)
-//         ON CONFLICT (email, name)
-//         DO UPDATE SET quantity = cart_items.quantity + $4
-//         RETURNING *;
-//       `;
-//       const values = [email, name, price, quantity];
-//       const result = await client.query(query, values);
+                // Insert the item into the cart table
+                await client.query(
+                    'INSERT INTO cart (customer_id, item_name, quantity, price, email) VALUES ($1, $2, $3, $4, $5)',
+                    [customer_id, name, quantity, price, email]
+                );
 
-//       // Return the added or updated item
-//       res.status(200).json({ message: 'Item added to cart', item: result.rows[0] });
-//     } else {
-//       // Handle unsupported HTTP methods
-//       res.status(405).json({ message: 'Method not allowed' });
-//     }
-//   } catch (error) {
-//     const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-//     res.status(500).json({ message: 'Database error', error: errorMessage });
-//   } finally {
-//     await client.end();
-//   }
-// }
+                res.status(200).json({ message: 'Item added to cart' });
+            } else {
+                res.status(400).json({ error: 'User not found' });
+            }
+
+            await client.end();
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    } else {
+        res.status(405).json({ error: 'Method Not Allowed' });
+    }
+}

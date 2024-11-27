@@ -17,10 +17,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await client.connect();
 
     try {
-        // Insert the user data into the table
+        // Call the PostgreSQL function to add the user
         await client.sql`
-            INSERT INTO customerAccount (email, username, password) 
-            VALUES (${email}, ${username}, ${password})
+            SELECT add_user(${email}, ${username}, ${password})
         `;
         res.status(201).json({ message: "User added successfully" });
     } catch (error) {
