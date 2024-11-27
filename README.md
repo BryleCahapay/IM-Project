@@ -5,3 +5,5 @@ Members:
 Cahapay, Bryle
 Domero, Shane Mae
 Macuha, Jovi Nica
+
+Updates : Binago lahat
