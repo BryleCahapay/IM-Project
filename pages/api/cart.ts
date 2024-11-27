@@ -1,47 +1,41 @@
-// import { createClient } from '@vercel/postgres';
-// import { NextApiRequest, NextApiResponse } from 'next';
+import { createClient } from '@vercel/postgres';
+import { NextApiRequest, NextApiResponse } from 'next';
 
-// export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-//   // Initialize the Vercel PostgreSQL client
-//   const client = createClient();
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+    if (req.method === 'POST') {
+        try {
+            const client = createClient();
+            await client.connect();
 
-//   try {
-//     // Connect to the database
-//     await client.connect();
+            const { name, price, quantity, customer_id } = req.body;
 
-//     if (req.method === 'POST') {
-//       const { name, price, quantity, email } = req.body;
+            // Fetch the email of the customer using user_id
+            const emailResult = await client.query(
+                'SELECT email FROM customeraccount WHERE customer_id = $1',
+                [customer_id]
+            );
 
-//       // Validate required fields
-//       if (!name || !price || !quantity || !email) {
-//         return res.status(400).json({ error: 'Missing required fields' });
-//       }
+            // If email is found
+            if (emailResult.rows.length > 0) {
+                const email = emailResult.rows[0].email;
 
-//       // Insert data into the database
-//       const query = `
-//         INSERT INTO cart_items (name, price, quantity)
-//         VALUES ($1, $2, $3, $4)
-//         RETURNING id;
-//       `;
-//       const values = [name, price, quantity, email];
+                // Insert the item into the cart table
+                await client.query(
+                    'INSERT INTO cart (customer_id, item_name, quantity, price, email) VALUES ($1, $2, $3, $4, $5)',
+                    [customer_id, name, quantity, price, email]
+                );
 
-//       const result = await client.query(query, values);
+                res.status(200).json({ message: 'Item added to cart' });
+            } else {
+                res.status(400).json({ error: 'User not found' });
+            }
 
-//       // Return a success response with the inserted item's ID
-//       res.status(200).json({
-//         message: 'Item added to cart successfully',
-//         id: result.rows[0].id,
-//       });
-//     } else {
-//       // Handle unsupported methods
-//       res.setHeader('Allow', ['POST']);
-//       res.status(405).end(`Method ${req.method} Not Allowed`);
-//     }
-//   } catch (error: any) {
-//     console.error('Database error:', error.message);
-//     res.status(500).json({ error: 'Internal server error' });
-//   } finally {
-//     // Clean up the connection
-//     await client.end();
-//   }
-// }
+            await client.end();
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    } else {
+        res.status(405).json({ error: 'Method Not Allowed' });
+    }
+}
