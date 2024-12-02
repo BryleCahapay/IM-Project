@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 
 interface CartItem {
-  name: string;
+  item_name: string;
   quantity: number;
   price: number;
 }
@@ -45,7 +45,7 @@ const PaymentMethod: React.FC = () => {
     const updatedInventory = [...inventory];
 
     cartItems.forEach((cartItem) => {
-      const productIndex = updatedInventory.findIndex(item => item.name === cartItem.name);
+      const productIndex = updatedInventory.findIndex(item => item.name === cartItem.item_name);
       if (productIndex !== -1) {
         updatedInventory[productIndex].stock -= cartItem.quantity;
       }
@@ -53,21 +53,7 @@ const PaymentMethod: React.FC = () => {
 
     setInventory(updatedInventory);
 
-    try {
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedInventory),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update inventory');
-      }
-    } catch (error) {
-      console.error('Error updating inventory:', error);
-    }
+   
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -104,6 +90,8 @@ const PaymentMethod: React.FC = () => {
         if (!response.ok) {
             throw new Error('Payment processing failed');
         }
+        
+        console.log(cartItems);
 
         router.push({
             pathname: '/ReceiptPage',
@@ -152,7 +140,7 @@ const PaymentMethod: React.FC = () => {
               {cartItems.map((item, index) => (
                 <li key={index} className="flex justify-between">
                   <span>
-                    {item.name} (x{item.quantity})
+                    {item.item_name} (x{item.quantity})
                   </span>
                   <span>₱ {item.price}</span>
                 </li>

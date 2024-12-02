@@ -23,9 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
-
     // Insert lahat ng information sa database mula sa PaymentMethod
-
 
     try {
       const itemNames = cartItems.map((item: { name: string }) => item.name).join(', ');

@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 
 interface CartItem {
   id: number;
-  name: string;
   price: number;
+  item_name: string;
 }
 
 const Receipt: React.FC = () => {
@@ -26,6 +26,8 @@ const Receipt: React.FC = () => {
   const receiptSaved = useRef(false);
 
   // Function to save the receipt to the database
+  console.log(parsedCartItems);
+
   const saveReceipt = async () => {
     const receiptData = {
       paymentMethod,
@@ -90,8 +92,8 @@ const Receipt: React.FC = () => {
           <>
             <ul className="space-y-2 text-gray-700">
               {parsedCartItems.map((item: CartItem, index) => (
-                <li key={`${item.id || index}-${item.name}`} className="flex justify-between border-b border-gray-200 pb-2">
-                  <span>{item.name}</span>
+                <li key={`${item.id || index}-${item.item_name}`} className="flex justify-between border-b border-gray-200 pb-2">
+                  <span>{item.item_name}</span>
                   <span>₱ {item.price}</span>
                 </li>
               ))}

@@ -45,58 +45,49 @@ const LandingPage = () => {
 
   const addToCart = async (item: PetFoodItem) => {
     try {
-        const existingItemIndex = cartItems.findIndex(cartItem => cartItem.name === item.name);
-
-        if (existingItemIndex !== -1) {
-            // If the item already exists in the cart, update its quantity
-            const updatedCartItems = cartItems.map((cartItem, index) =>
-                index === existingItemIndex
-                    ? { ...cartItem, quantity: (cartItem.quantity ?? 0) + 1 }
-                    : cartItem
-            );
-
-            setCartItems(updatedCartItems);
-            localStorage.setItem('cartItems', JSON.stringify(updatedCartItems));
-
-            // Send updated cart item to the database
-            await fetch('/api/cart', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                  name: item.name,
-                  price: item.price,
-                  quantity: 1, // Increment quantity by 1
-                  customer_id: 1, // Replace with the actual user ID
-              }),
-          });
-          
-        } else {
-            // Add the new item to the cart
-            const updatedCartItems = [...cartItems, { ...item, quantity: 1 }];
-            setCartItems(updatedCartItems);
-            localStorage.setItem('cartItems', JSON.stringify(updatedCartItems));
-
-            // Send new cart item to the database
-            await fetch('/api/cart', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: item.name,
-                    price: item.price,
-                    quantity: 1,
-                    customer_id: 1, // Replace with the actual user ID
-                }),
-            });
-        }
-
-        setCartCount(cartItems.length + 1);
-    } catch (error) {
-        console.error(error);
-        alert('This item is sold out and cannot be added to your cart.');
-    }
-};
-
+      // Check stock before adding the item to the cart
+      const response = await fetch('/api/check-stock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          itemName: item.name,
+          quantity: 1, // Always checking for 1 item since it's a new addition
+        }),
+      });
+      setCartCount(cartCount + 1);
+      const stockData = await response.json();
   
+      if (!stockData.success) {
+        alert(stockData.message || 'Sorry, this item is out of stock.');
+        return; // Exit if stock is insufficient
+      }
+  
+      // Stock is sufficient; proceed to add the item to the cart
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const customerId = user.customer_id;
+      const email = user.email;
+  
+      // Send updated cart item to the database
+      await fetch('/api/cart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: item.name,
+          price: item.price,
+          quantity: 1, // Increment quantity by 1
+          customer_id: customerId,
+          email, // Replace with the actual user ID
+        }),
+      });
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred while adding this item to your cart.');
+    }
+  };
+  
+
   
   
 

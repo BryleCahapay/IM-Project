@@ -5,8 +5,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 interface CartItem {
-  imageUrl: string;
-  name: string;
+  id: number;
+  item_name: string;
   price: number;
   quantity?: number;
   isChecked?: boolean;
@@ -14,16 +14,48 @@ interface CartItem {
 
 const CartPage = () => {
   const router = useRouter();
-  const cartItemsFromStorage = typeof window !== "undefined" ? JSON.parse(localStorage.getItem('cartItems') || '[]') : [];
 
-  const [items, setItems] = useState<CartItem[]>(cartItemsFromStorage.map((item: CartItem) => ({ ...item, quantity: 1, isChecked: false })));
+  const [items, setItems] = useState<CartItem[]>([]);
 
-  // Update cart items in localStorage whenever the state changes
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem('cartItems', JSON.stringify(items));
+    fetchCartItems();
+  }, []);
+
+  const imageUrlMapping: Record<string, string> = {
+    'Whooppy': '/images/Whooppy.jpg',
+    'Nutrichunks': '/images/nutrichunks.jpg',
+    'Aozi dog': '/images/Aozi.jpg',
+    'Pedigree': '/images/Pedigree.jpg',
+    'Vitality High energy': '/images/VitalityHighEnergy.jpg',
+    'Tomi': '/images/Tomi.jpg',
+    'Nutricare tuna': '/images/TunaFlavorNutriCare.jpg',
+    'Whiskas Ocean fish': '/images/WhiskasOceanFish.jpg',
+    'Aozi Cat': '/images/AoziCatFood.jpeg',
+    'Princess': '/images/princesscat20kg.jpg',
+    'Nutricare salmon': '/images/SalmonFlavorNutriCare.jpeg',
+    'Vitality Value Meal': '/images/VitalityValueMeal.jpg',
+    'My Cat': '/images/Mycart.jpg',
+    'Azu': '/images/AzuDentalBites.jpg',
+    'Whiskas tuna': '/images/WhiskasTunaFlavour.jpg',
+  };
+
+  const fetchCartItems = async () => {
+    const userid = JSON.parse(localStorage.getItem("user")|| "").customer_id
+    try {
+      const response = await fetch(`/api/cart?userid=${userid}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const fetcheditems = await response.json()
+      
+      if (response.ok){
+        setItems(fetcheditems)
+      }
+    } catch (error) {
+      console.error(error)
     }
-  }, [items]);
+  }
+
 
   const handleQuantityChange = async (index: number, increment: number) => {
     const newQuantity = Math.max(1, (items[index].quantity ?? 1) + increment);
@@ -35,11 +67,11 @@ const CartPage = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        itemName: items[index].name,
+        itemName: items[index].item_name,
         quantity: newQuantity,
       }),
     });
-  
+
     const data = await response.json();
   
     if (data.success) {
@@ -53,7 +85,6 @@ const CartPage = () => {
       alert(data.message || 'Not enough stock available.');
     }
   };
-  
 
   const handleCheckboxChange = (index: number) => {
     setItems((prevItems) =>
@@ -63,8 +94,11 @@ const CartPage = () => {
     );
   };
 
-  const handleDelete = (index: number) => {
-    setItems((prevItems) => prevItems.filter((_, i) => i !== index));
+  const handleDelete = async (id: number) => {
+    await fetch(`/api/cart?id=${id}`, {
+        method: "DELETE"
+    })
+    fetchCartItems();
   };
 
   const totalPrice = items.reduce(
@@ -89,7 +123,7 @@ const CartPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          itemName: item.name,
+          itemName: item.item_name,
           quantity: item.quantity ?? 1, // Default to 1 if quantity is undefined
         }),
       });
@@ -103,7 +137,7 @@ const CartPage = () => {
     // If any item has insufficient stock, alert the user and don't proceed with checkout
     const unavailableItems = stockCheckResults.filter(result => !result.isAvailable);
     if (unavailableItems.length > 0) {
-      const unavailableItemsNames = unavailableItems.map(result => result.item.name).join(', ');
+      const unavailableItemsNames = unavailableItems.map(result => result.item.item_name).join(', ');
       alert(`The following items are out of stock and cannot be checked out: ${unavailableItemsNames}`);
       return;
     }
@@ -114,6 +148,17 @@ const CartPage = () => {
       0
     );
   
+    // Send request to delete the checked-out items from the cart in the database
+    await Promise.all(
+      selectedItems.map(item =>
+        fetch(`/api/cart?id=${item.id}`, {
+          method: 'DELETE',
+        })
+      )
+    );
+  
+    
+    // Redirect to the payment method page
     localStorage.setItem('cartItems', JSON.stringify(selectedItems)); // Save selected items
     setItems([]); // Clear the cart state
   
@@ -126,7 +171,9 @@ const CartPage = () => {
   
     // Optionally clear cart from localStorage after checkout
     localStorage.setItem('cartItems', JSON.stringify([]));
+    
   };
+  
   
   
   
@@ -158,16 +205,16 @@ const CartPage = () => {
                       <>
                         <ul className="space-y-4">
               {items.map((item, index) => (
-                <li key={item.name} className="flex flex-col md:flex-row items-center justify-between p-4 rounded-md shadow" style={{ backgroundColor: '#ECDFCC' }}>
+                <li key={item.item_name} className="flex flex-col md:flex-row items-center justify-between p-4 rounded-md shadow" style={{ backgroundColor: '#ECDFCC' }}>
                   <input
                     type="checkbox"
                     checked={item.isChecked}
                     onChange={() => handleCheckboxChange(index)}
                     className="mr-4"
                   />
-                  <Image src={item.imageUrl} alt={item.name} width={64} height={64} className="mr-4 rounded object-cover" />
+                  <Image src={imageUrlMapping[item.item_name]} alt={item.item_name} width={64} height={64} className="mr-4 rounded object-cover" />
                   <div className="flex-1 text-center md:text-left">
-                    <span className="font-semibold text-black text-sm md:text-base">{item.name}</span>
+                    <span className="font-semibold text-black text-sm md:text-base">{item.item_name}</span>
                     <div className="text-black text-sm md:text-base">₱ {item.price}</div>
                   </div>
                   <div className="flex items-center space-x-2 mt-2 md:mt-0">
@@ -179,7 +226,7 @@ const CartPage = () => {
                     <button onClick={() => handleQuantityChange(index, 1)} className="bg-gray-100 p-1 rounded text-black font-bold">
                       +
                     </button>
-                    <button onClick={() => handleDelete(index)} className="text-red-600">
+                    <button onClick={() => handleDelete(item.id)} className="text-red-600">
                       <FontAwesomeIcon icon={faTrash} />
                     </button>
                   </div>
