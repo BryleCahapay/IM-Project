@@ -29,16 +29,19 @@ const Receipt: React.FC = () => {
   console.log(parsedCartItems);
 
   const saveReceipt = async () => {
+    // Extract only the item names (not the entire item object)
+    const itemNames = parsedCartItems.map((item) => item.item_name); // Use item names only
+  
     const receiptData = {
       paymentMethod,
-      cartItems: parsedCartItems,
+      cartItems: itemNames,  // Only send the names of the items
       totalAmount,
       address,
       contactNumber,
       orderDate,
       email,  // Use the email from state or query
     };
-
+  
     try {
       const response = await fetch('/api/receipt', {
         method: 'POST',
@@ -47,7 +50,7 @@ const Receipt: React.FC = () => {
         },
         body: JSON.stringify(receiptData),
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         console.log('Receipt saved:', data.message);
@@ -58,6 +61,8 @@ const Receipt: React.FC = () => {
       console.error('Error sending receipt:', error);
     }
   };
+  
+  
 
   useEffect(() => {
     // Check if receipt has already been saved

@@ -45,7 +45,7 @@ const PaymentMethod: React.FC = () => {
     const updatedInventory = [...inventory];
 
     cartItems.forEach((cartItem) => {
-      const productIndex = updatedInventory.findIndex(item => item.name === cartItem.item_name);
+      const productIndex = updatedInventory.findIndex(item => item.name === item.name);
       if (productIndex !== -1) {
         updatedInventory[productIndex].stock -= cartItem.quantity;
       }

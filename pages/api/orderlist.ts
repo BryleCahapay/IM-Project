@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await client.connect();
 
     // Query the database to fetch order details, excluding 'null' and 'pending' statuses
-    // fetch galing sa database table receipt, tapos kung not null and status pending ay hindi niya kukunin
+    // fetch galing sa database table receipt, tapos kung not null and status pending
     const result = await client.query(`
       SELECT 
         id,
