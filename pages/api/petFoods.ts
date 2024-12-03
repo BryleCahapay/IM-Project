@@ -27,7 +27,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (!id || !name || !price || !onHand) {
             return res.status(400).json({ message: "Missing required fields." });
         }
-
     // Sa pag Edit tapos kung i sasave yung ma inedit is yun yung upupdate sa database pet_foods
 /////////////////////////////////////////////////
         try {

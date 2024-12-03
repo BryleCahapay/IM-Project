@@ -22,10 +22,10 @@ const AdminPetFood = () => {
 
   // Redirect unauthenticated users to the login page
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!user) {
       router.push('/LoginForm');
     } else if (user?.role !== 'admin') {
-      router.push('/AdminPage'); // Redirect non-admin users
+      router.push('/Home'); // Redirect non-admin users
     }
   }, [isAuthenticated, user, router]);
 
@@ -215,7 +215,7 @@ const AdminPetFood = () => {
         {/* Confirmation Modal */}
         {showConfirmation && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white p-4 rounded shadow-md">
+            <div className="bg-white text-black p-4 rounded shadow-md">
               <h2 className="text-xl mb-4">Are you sure you want to log out?</h2>
               <div className="flex justify-between">
                 <button

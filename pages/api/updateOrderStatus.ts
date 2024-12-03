@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await client.connect();
 
-    // Using stored procedure for updating the order status
+    // Using stored Procedure for updating the order status
     const query = 'CALL update_order_status($1, $2)';
     const values = [id, status];
 

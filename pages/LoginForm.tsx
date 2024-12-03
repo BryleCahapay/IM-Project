@@ -1,18 +1,23 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+
 import { useAuth } from '@/context/Authcontext';
+
+
 const LoginForm = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const router = useRouter();
+
   const values = {email,password};
   const {login} = useAuth();
+
 
   // Frontend - LoginForm
 const handleLogin = async (event: React.FormEvent) => {
   event.preventDefault();
+
+  
 
   if (!email || !password) {
     setError('Please fill out all fields.');
@@ -59,9 +64,7 @@ const handleLogin = async (event: React.FormEvent) => {
 
 
 
-  const handleAdminClick = () => {
-    router.push('/AdminForm'); // Redirect to the admin page
-  };
+
 
   return (
     <div
@@ -112,15 +115,7 @@ const handleLogin = async (event: React.FormEvent) => {
           </Link>
         </p>
 
-        {/* Admin Button */}
-        <div className="flex justify-center mt-4">
-          <button
-            onClick={handleAdminClick}
-            className="text-yellow-500 hover:text-yellow-600  font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105"
-          >
-            Admin
-          </button>
-        </div>
+      
       </div>
     </div>
   );

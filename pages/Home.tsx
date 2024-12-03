@@ -4,15 +4,24 @@ import { useAuth } from '../context/Authcontext'; // Make sure to adjust the imp
 import { useRouter } from 'next/router'; // Add this import
 
 const Home: React.FC = () => {
-  const { isAuthenticated } = useAuth(); // Destructure values from AuthContext
+  const { user } = useAuth(); // Destructure values from AuthContext
   const router = useRouter(); // Initialize the router
 
   // Redirect user to LoginPage if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/LoginForm');
+    if (user) {
+      if(user.role == 'admin') {
+        router.push("/AdminPage");
+      } 
+      else if(user.role == 'customer'){
+        router.push("/Home");
+      }
+    } else {
+      router.push("/LoginForm");
     }
-  }, [isAuthenticated, router]);
+  }, [user, router]);
+
+
 
   return (
     <div

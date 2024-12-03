@@ -3,8 +3,8 @@ import { useRouter } from 'next/router';
 
 interface CartItem {
   id: number;
-  name: string;
   price: number;
+  item_name: string;
 }
 
 const Receipt: React.FC = () => {
@@ -26,17 +26,22 @@ const Receipt: React.FC = () => {
   const receiptSaved = useRef(false);
 
   // Function to save the receipt to the database
+  console.log(parsedCartItems);
+
   const saveReceipt = async () => {
+    // Extract only the item names (not the entire item object)
+    const itemNames = parsedCartItems.map((item) => item.item_name); // Use item names only
+  
     const receiptData = {
       paymentMethod,
-      cartItems: parsedCartItems,
+      cartItems: itemNames,  // Only send the names of the items
       totalAmount,
       address,
       contactNumber,
       orderDate,
       email,  // Use the email from state or query
     };
-
+  
     try {
       const response = await fetch('/api/receipt', {
         method: 'POST',
@@ -45,7 +50,7 @@ const Receipt: React.FC = () => {
         },
         body: JSON.stringify(receiptData),
       });
-
+  
       const data = await response.json();
       if (response.ok) {
         console.log('Receipt saved:', data.message);
@@ -56,6 +61,8 @@ const Receipt: React.FC = () => {
       console.error('Error sending receipt:', error);
     }
   };
+  
+  
 
   useEffect(() => {
     // Check if receipt has already been saved
@@ -90,8 +97,8 @@ const Receipt: React.FC = () => {
           <>
             <ul className="space-y-2 text-gray-700">
               {parsedCartItems.map((item: CartItem, index) => (
-                <li key={`${item.id || index}-${item.name}`} className="flex justify-between border-b border-gray-200 pb-2">
-                  <span>{item.name}</span>
+                <li key={`${item.id || index}-${item.item_name}`} className="flex justify-between border-b border-gray-200 pb-2">
+                  <span>{item.item_name}</span>
                   <span>₱ {item.price}</span>
                 </li>
               ))}
